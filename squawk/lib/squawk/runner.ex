@@ -2,6 +2,7 @@ defmodule Squawk.Runner do
   alias Porcelain.Process
   alias Porcelain.Result
 
+  # spawn_nodes() is called from the CLI module
   def spawn_nodes(:any, cmd, input, split) do
     log "Connecting nodes"
     node = Squawk.Util.connect_nodes |> pick_random
@@ -18,6 +19,11 @@ defmodule Squawk.Runner do
     Squawk.Util.connect_nodes(names) |> run_list(cmd, input, split)
   end
 
+  # This one is called by the 'chain' command.
+  # Here we spawn Porcelain processes on each node in turn. From each process
+  # we get an ouput stream that we pass as input to the next process. Once this
+  # is all set up, we send input to the first process and read output from the
+  # last one. The intermediate communication is handled by Porcelain for free.
   def spawn_consecutive_nodes(node_names) do
     nodes =
       node_names
@@ -62,6 +68,7 @@ defmodule Squawk.Runner do
     :rpc.multicall(nodes, Porcelain, :spawn_shell, [cmd, options])
   end
 
+  # Pick a random node from the list of nodes
   defp pick_random(list) do
     count = Enum.count(list)
     rindex = :random.uniform(count)-1
@@ -79,6 +86,8 @@ defmodule Squawk.Runner do
     proc
   end
 
+  # feed_input() clause is chosen based on the options passed from the command
+  # line
   defp feed_input(false, _, procs) do
     # send EOF to each processes
     Enum.each(procs, &Process.send_input(&1, ""))
@@ -169,6 +178,7 @@ defmodule Squawk.Runner do
     Enum.into(stream, IO.stream(:stdio, :line))
   end
 
+  # Log into stderr, so that piping in the shell does not pipe log messages
   defp log(msg) do
     IO.write :stderr, "--> "
     IO.puts :stderr, msg

@@ -1,4 +1,10 @@
 defmodule Squawk.Util do
+  # Functions for parsing the nodes.txt file, connecting to specified nodes and
+  # returning a list of the form
+  #
+  #     [{<short name>, <node atom>}, ...]
+  #
+
   def connect_nodes do
     read_node_list
     |> parse_node_list

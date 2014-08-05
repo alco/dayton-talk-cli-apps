@@ -1,3 +1,4 @@
+# This is a declarative definition of our CLI
 spec = [
   name: "squawk",
 
@@ -42,6 +43,7 @@ defmodule Squawk.CLI do
 
   alias Commando.Cmd
 
+  # main() is called when the escript is invoked from the command line
   def main(args) do
     :random.seed(:erlang.now)
     Commando.exec(args, @cmdspec, actions: [
@@ -52,6 +54,7 @@ defmodule Squawk.CLI do
     ])
   end
 
+  # Callback for the 'run' command. Do some remaining options parsing here
   def cmd_run(%Cmd{arguments: %{"command" => cmd}, options: opts}, %Cmd{options: mainopts}=_cmdb) do
     nodes = case Keyword.get(opts, :nodelist) do
       "@any" -> :any
@@ -71,6 +74,7 @@ defmodule Squawk.CLI do
     Squawk.Runner.spawn_nodes(nodes, cmd, input, input_split)
   end
 
+  # Callback for the 'chain' command
   def cmd_chain(%Cmd{arguments: %{"commands" => commands}}, %Cmd{options: mainopts}=_cmdb) do
     nodes = Enum.map(commands, fn cmd ->
       [node, command] = String.split(cmd, ":", parts: 2)
