@@ -1,0 +1,2 @@
+%{"commando": {:git, "git://github.com/alco/commando.git", "ba990152f30c64609fec0ee143f517b14f04126a", []},
+  "porcelain": {:package, "1.1.1"}}

@@ -1,0 +1,243 @@
+>>> SPEAKER NOTES
+
+
+>>>>>>>> ABOUT ME
+
+* I've been doing game development most of my career so far
+* I've always been on the look out for new technologies, new languages, new
+  things software dev world
+* CAME ACROSS ELIXIR
+* got a job writing open source in Elixir
+* it's been great to see how the community around the language has been steadily growing
+  over the past two years
+* full of enthusiasm to see the ecosystem and the community grow faster than ever before
+* I'm hoping to infect you with enthusiasm in this talk 
+
+
+>>> AGENDA
+
+A demo that puts all the knowledge we will obtain in this talk together by
+bulding a cool project
+
+
+--> personal motivation
+
+What is a cLI APP?
+
+Established way of interaction between multiple programs --> high-level code reuse (or functionality reuse)
+
+Why CLI apps?
+
+While mastering OTP and/or building backends might be the ultimate goal for
+many Elixir users, Elixir remains a general purpose language. Exploring how it
+can be applied in other areas will only do good to improving its ecosystem and
+expanding the community.
+
+--> basic motivation (pragmatic concern)
+
+Nobody wants to deal with dozens or even hundreds of dependencies.
+If you have Elixir installed on the sever, might as well run programs on it. So
+you don't have to install multiple different platforms like Python, or Java, or
+whatever.
+
+CLI is a universal protocol that has shown itself rather useful and practical.
+
+
+
+
+>>>> WHY ELIXIR?
+
+Just a few more points to sell you on the idea of writing CLI apps in Elixir.
+
+
+Writing command-line tools in Elixir is beneficial for a few reasons
+
+  * also Erlang library: networks, protocols, binary data, etc.
+    A LOT OF PROBLEMS HAVE BEEN SOLVED IN THE ERLANG SPACE ALREADY
+
+
+  * your knowledge of OTP will come in handy even when writing a command-line app
+    it's common to manage resources with processes on BEAM, as in files, ports, client connections, DB connections,...
+    to free a resource, just crash the process responsible for it
+    And by setting up a supervision tree you can have a predefined scenario for cleaning up a whole set of resources.
+
+    Also doable with objects, but with all the tranditional restrictions applied.
+
+  * handling external resources – simply crash your process
+    (simplicity of the programming model is key to writing robust software)
+    like objects, but with let it crash
+
+  * build CLI tools that easily communicate across multiple machines
+
+
+
+
+## Evolution of command line with Elixir
+   (from simplest to most portable)
+
+* Mix tasks       [works only with mix]
+* Mix archives    [works by adding to load path]
+* escript         [works with Erlang]
+* mix escript.install
+* release         [works standalone]
+
+---> Which one to choose?
+
+Mix tasks are for development: mix docs, mix release, mix phoenix.new.
+
+Escripts are for general-purpose tools like uweb. Uweb implements a mix task
+just for the purposes of the demo. In practice, you should target a single
+distribution approach, one that makes most sense for your program.
+
+Releases suit GUI apps rather well. For CLI there are issues of size and
+startup time.
+
+
+
+MIX TASK: enhance development workflow
+
+mix release, mix dialyze, mix deps.get, mix bench
+
+
+DO NOT OVERUSE archives. Once you experience your first breakage due to Elixir
+update, you'll see they are not as robust as one would wish.
+
+
+
+
+>>>>>>>>>>>> Toolbox for writing command-line apps
+
+
+--> two sides of the topic
+
+  1. Building command-line apps in Elixir
+  
+  2. Calling external processes from Elixir (IPC)
+     "The external process problem"
+      
+     Examples:
+     - porcelain
+     - ex_doc (building NIF from C is bad; using external process is good)
+     - beamie (Erlang RPC vs IPC; scaling to multiple nodes)
+     - github (limiting the num of external processes, queueing, distributing)
+  
+
+
+
+1. Building a CLI app
+* OptionParser
+* Commando (mention [[https://github.com/jcomellas/getopt|getopt]])
+
+1.5. Using stdlib -- it has all the power
+
+2. Interfacing existing tools
+* Ports
+* Porcelain (mention [[https://github.com/saleyn/erlexec|erlexec]], 
+                     [[https://github.com/devinus/sh|sh]])
+* compare to Python, Ruby, Go ???
+  [[http://www.awesomecommandlineapps.com/gems.html|Ruby cli gems]]
+  [[http://www.awesomecommandlineapps.com/|Ruby book]]
+  [[http://rubylearning.com/blog/2011/01/03/how-do-i-make-a-command-line-tool-in-ruby/|Ruby tutorial]]
+
+
+
+Not so many tools for building CLI in Elixir, but it's just a matter of time
+before the ecosystem grows. If people find it useful and convenient to write
+CLi apps in Elixir (and I'm sure many will), we will have more tools created
+eventually.
+
+
+>>>>>> DEMO
+
+docker run --rm -it --net=host demoimg bash
+
+iex --name foo@172.17.8.101 -S mix
+iex --name bar@172.17.8.101 -S mix
+iex --name nyc@162.243.98.109 -S mix
+
+
+1) show 
+  
+  squawk run --all-nodes 'echo hello'
+  squawk run --nodes=foo,bar 'echo hello'
+
+2) more interestingly
+
+  squawk run --split=line --nodes=foo,bar 'grep -v foo' < input.txt
+
+    # this is a local file we are sending data from to other nodes
+
+3) rudimentary chaining
+
+  cat filter_input.txt | ./squawk run -i --nodes=foo 'grep green' | ./squawk --name=other run -i --nodes=bar 'grep roses'
+
+  squawk chain 'foo:grep green' 'nyc:grep blue' < filter_input.txt
+
+
+
+>>>>> CODE WALK
+
+
+Important thing to remember: always think about the CLI as just one of possible
+interfaces to your program. Build the program as a library making it easier to
+reuse in a different context later on.
+
+Think about error handling, option parsing, exiting beforehand. 
+Example: git vs libgit.
+
+
+
+        λ squawk run -w 'grep foo' -w 'grep bar | cut -d 1-2' --name-machine <input
+
+        λ squawk run -w 'grep foo' -w 'grep bar | cut -d 1-2' --name-machine < <url>
+
+
+## Conclusions
+
+
+   Potential improvements:
+     - more refined RPC mechanism
+     - group leader for seamless IO
+
+
+  * Our primary goal here was to experiment and have fun with Elixir. It is a
+    powerful language that builds on a powerful foundation. So we just use all
+    that power to build something fun that is not constrained to a certain
+    established world view of what a command-line tool is.
+    
+    Distribution was an easy and natural thing to do with Elixir. Imagine that
+    setting up a video conference between two nodes over any kind of network
+    (cellular or broadband) was as easy; or running a game server for a
+    realtime multiplayer game. Once a thing like this becomes part of the system you are using
+    reachable at a flick of a switch, you can start thinking about much more
+    high-level and complex problems.
+
+  * the examples shown earlier are not meant as a recommendation. Use your own
+    thinking to decide when you need a CLI and when a service connected over
+    network or directly to Elixir node will do
+
+  * if you have Elixir installed, might as well use it. In the future the
+    workflow for building and using CLI apps will only be improving (provided
+    more people are using it)
+    
+
+
+
+
+
+>>> SIDENOTE (optional)
+    
+    Just a recommendation: build a minimal working thing first
+
+  * if you want to build a library right away – don't. It is important to
+    understand the practical aspects of the task at hand.    
+    
+  * but if you have built a solution to a practical problem and have verified
+    its usefulness in practice, consider extending it into a full-fledged
+    library for others to use. Now go and build something cool. The more cool
+    things we do and build with Elixir, the sooner we will see it turning into
+    the go-to solution for a wide range of problems that are dominated today by
+    slow and unreliable imperative, object-oriented dynamic languages.
+    
+  * FP all the things
+

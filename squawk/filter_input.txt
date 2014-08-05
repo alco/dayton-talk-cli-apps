@@ -1,0 +1,9 @@
+red roses
+green roses
+blue roses
+red grass
+green grass
+blue grass
+red sky
+blue sky
+green sky

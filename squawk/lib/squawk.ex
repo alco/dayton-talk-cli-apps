@@ -1,0 +1,2 @@
+defmodule Squawk do
+end

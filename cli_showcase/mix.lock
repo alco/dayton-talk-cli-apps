@@ -1,0 +1,2 @@
+%{"commando": {:git, "git://github.com/alco/commando.git", "d810bc6b6a52a79218f7d8bc33fc13d375e39b48", []},
+  "getopt": {:git, "git://github.com/jcomellas/getopt.git", "388dc95caa7fb97ec7db8cfc39246a36aba61bd8", [tag: "v0.8.2"]}}
